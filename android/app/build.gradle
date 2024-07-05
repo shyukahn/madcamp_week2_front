@@ -23,6 +23,8 @@ if (flutterVersionName == null) {
     flutterVersionName = "1.0"
 }
 
+def kakaoNativeAppKey = localProperties.getProperty("kakao.nativeAppKey")
+
 android {
     namespace = "com.madcamp.serverapp"
     compileSdk = flutter.compileSdkVersion
@@ -42,6 +44,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName
+        manifestPlaceholders = [kakaoAppkey: kakaoNativeAppKey]
     }
 
     buildTypes {

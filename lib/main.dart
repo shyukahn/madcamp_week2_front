@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:serverapp/pages/homepage.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:serverapp/pages/login_page.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: "assets/config/.env");
+  KakaoSdk.init(nativeAppKey: dotenv.env['kakaoAppkey']);
+
   runApp(const MyApp());
 }
 
