@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:serverapp/pages/my_page.dart';
+import 'package:serverapp/pages/problem_page.dart';
 
 class Homepage extends StatefulWidget {
   const Homepage({super.key, required this.title});
@@ -18,10 +19,7 @@ class _HomepageState extends State<Homepage> {
       'Page 1',
       style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold),
     ),
-    Text(
-      'Page 2',
-      style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold),
-    ),
+    ProblemPage(),
     MyPage(),
   ];
 
