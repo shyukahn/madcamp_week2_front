@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
+import 'package:serverapp/pages/HomePage.dart';
 import 'package:serverapp/pages/login_page.dart';
 
 void main() async {
@@ -8,11 +9,24 @@ void main() async {
   await dotenv.load(fileName: "assets/config/.env");
   KakaoSdk.init(nativeAppKey: dotenv.env['kakaoAppkey']);
 
-  runApp(const MyApp());
+  bool isLoggedIn = await checkKakaoLoginStatus();
+
+  runApp(MyApp(isLoggedIn: isLoggedIn));
+}
+
+Future<bool> checkKakaoLoginStatus() async {
+  try {
+    final tokenInfo = await UserApi.instance.accessTokenInfo();
+    return tokenInfo.id! > 0;
+  } catch(error) {
+    return false;
+  }
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool isLoggedIn;
+
+  const MyApp({super.key, required this.isLoggedIn});
 
   // This widget is the root of your application.
   @override
@@ -23,7 +37,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
         useMaterial3: true,
       ),
-      home: LoginPage(),
+      home: isLoggedIn ? const Homepage(title: "Homepage Title") : LoginPage(),
     );
   }
 }

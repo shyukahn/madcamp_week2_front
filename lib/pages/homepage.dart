@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:serverapp/pages/my_page.dart';
 
 class Homepage extends StatefulWidget {
   const Homepage({super.key, required this.title});
@@ -21,10 +22,7 @@ class _HomepageState extends State<Homepage> {
       'Page 2',
       style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold),
     ),
-    Text(
-      'Page 3',
-      style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold),
-    ),
+    MyPage(),
   ];
 
   void _onItemTapped(int index) {

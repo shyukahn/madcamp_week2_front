@@ -54,10 +54,6 @@ class LoginPage extends StatelessWidget {
     );
   }
 
-  void signOut() async {
-    await UserApi.instance.unlink();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -77,7 +73,6 @@ class LoginPage extends StatelessWidget {
                 'kakao_login_medium_wide',
                 () => signInWithKakao(context)
             ),
-            _kakaoLogoutButton()
           ],
         ),
       ),
@@ -88,7 +83,7 @@ class LoginPage extends StatelessWidget {
     return TextField(
       controller: _usernameController,
       decoration: const InputDecoration(
-          hintText: 'Username',
+          hintText: '아이디',
           hintStyle: TextStyle(
             color: Colors.grey,
           )
@@ -102,7 +97,7 @@ class LoginPage extends StatelessWidget {
       controller: _passwordController,
       obscureText: true,
       decoration: const InputDecoration(
-        hintText: 'Password',
+        hintText: '비밀번호',
         hintStyle: TextStyle(
           color: Colors.grey,
         ),
@@ -115,14 +110,6 @@ class LoginPage extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Image.asset('assets/images/$path.png'),
-    );
-  }
-
-  Widget _kakaoLogoutButton() {
-    return ElevatedButton(
-      onPressed: signOut,
-      style: ButtonStyle(),
-      child: const Text('로그아웃'),
     );
   }
 }
