@@ -1,6 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
+import 'package:http/http.dart' as http;
 import 'package:serverapp/pages/HomePage.dart';
 
 class LoginPage extends StatelessWidget {
@@ -8,6 +13,7 @@ class LoginPage extends StatelessWidget {
 
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _userUrl = Uri.parse('${dotenv.env['baseUrl']}users/save_user/');
 
   void _login(BuildContext context) {
     // TODO: validate input with login server
@@ -21,7 +27,8 @@ class LoginPage extends StatelessWidget {
     }
   }
 
-  void signInWithKakao(BuildContext context) async {
+  void _signInWithKakao(BuildContext context) async {
+    bool isUserLoggedIn = false;
     try {
       bool isInstalled = await isKakaoTalkInstalled();
 
@@ -29,21 +36,36 @@ class LoginPage extends StatelessWidget {
           ? await UserApi.instance.loginWithKakaoTalk() // if installed execute KakaoTalk
           : await UserApi.instance.loginWithKakaoAccount(); // else Kakao web
 
-      print('카카오톡으로 로그인 성공');
-
-      // 로그인 성공 후 사용자 정보 요청
-      User user = await UserApi.instance.me();
-      print('회원번호: ${user.id}\n');
-      print('닉네임: ${user.kakaoAccount?.profile?.nickname}\n');
-
-      _gotoHomepage(context);
-
+      final user = await UserApi.instance.me();
+      isUserLoggedIn = true;
+      final response = await http.post(_userUrl,
+        body: {
+          'kakao_id' : user.id.toString(),
+          'nickname' : user.kakaoAccount!.profile!.nickname,
+          'profile_image' : user.kakaoAccount!.profile!.profileImageUrl.toString(),
+          'thumbnail_image' : user.kakaoAccount!.profile!.thumbnailImageUrl.toString()
+        }
+      );
+      // 200 -> update OK, 201 -> Created
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (!context.mounted) {
+          throw StateError('Widget not mounted');
+        }
+        Fluttertoast.showToast(msg: '카카오톡으로 로그인했습니다');
+        _gotoHomepage(context);
+      } else {
+        throw const HttpException('Bad response: 인터넷 연결을 확인해주세요');
+      }
     } catch (error) {
-      print('카카오톡으로 로그인 실패 $error');
       // 사용자가 카카오톡 설치 후 디바이스 권한 요청 화면에서 로그인을 취소한 경우,
       // 의도적인 로그인 취소로 보고 카카오계정으로 로그인 시도 없이 로그인 취소로 처리 (예: 뒤로 가기)
+      if(isUserLoggedIn) {
+        await UserApi.instance.logout();
+      }
       if (error is PlatformException && error.code == 'CANCELED') {
-        return;
+        Fluttertoast.showToast(msg: '로그인이 취소되었습니다');
+      } else {
+        Fluttertoast.showToast(msg: error.toString());
       }
     }
   }
@@ -70,8 +92,8 @@ class LoginPage extends StatelessWidget {
               child: const Text('Login'),
             ),
             _kakaoLoginButton(
-                'kakao_login_medium_wide',
-                () => signInWithKakao(context)
+                'kakao_login_medium_wide.png',
+                () => _signInWithKakao(context)
             ),
           ],
         ),
@@ -109,7 +131,7 @@ class LoginPage extends StatelessWidget {
   Widget _kakaoLoginButton(String path, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
-      child: Image.asset('assets/images/$path.png'),
+      child: Image.asset('assets/images/$path'),
     );
   }
 }

@@ -12,4 +12,13 @@ class GeminiSource {
       return e.toString();
     }
   }
+
+  static Future<String> getFromImageAndText(String text) async {
+    try {
+      final value = await _gemini.text(text, modelName: 'models/gemini-pro');
+      return value?.output ?? _errorMessage;
+    } catch (e) {
+      return e.toString();
+    }
+  }
 }

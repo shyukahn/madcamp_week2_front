@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:serverapp/pages/community_page.dart';
 import 'package:serverapp/pages/my_page.dart';
 import 'package:serverapp/pages/problem_page.dart';
 
@@ -15,10 +16,7 @@ class _HomepageState extends State<Homepage> {
   int _selectedIndex = 0;
 
   static const List<Widget> _mainPages = <Widget>[
-    Text(
-      'Page 1',
-      style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold),
-    ),
+    CommunityPage(),
     ProblemPage(),
     MyPage(),
   ];
