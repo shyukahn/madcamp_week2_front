@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../models/simple_post.dart';
+import '../pages/full_post_page.dart';
 
 class PostListView extends ListView {
   final List<SimplePost> simplePosts;
+  final communityUrl = '${dotenv.env['baseUrl']}community/post/';
+
   PostListView({super.key, required this.simplePosts});
 
-  void _showSelectedPost() {
-
+  void _showSelectedPost(BuildContext context, SimplePost simplePost) {
+    Navigator.of(context).push(
+        MaterialPageRoute(builder: (context) => FullPostPage(simplePost.postId))
+    );
   }
 
   @override
@@ -17,7 +23,7 @@ class PostListView extends ListView {
         itemBuilder: (BuildContext context, int index) {
           final post = simplePosts[index];
           return TextButton(
-              onPressed: _showSelectedPost,
+              onPressed: () => _showSelectedPost(context, post),
               style: TextButton.styleFrom(
                   shape: const ContinuousRectangleBorder()
               ),
