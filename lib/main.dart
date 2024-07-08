@@ -39,7 +39,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
         useMaterial3: true,
       ),
-      home: isLoggedIn ? const Homepage(title: "Homepage Title") : LoginPage(),
+      home: isLoggedIn ? const Homepage(title: "App") : LoginPage(),
     );
   }
 }

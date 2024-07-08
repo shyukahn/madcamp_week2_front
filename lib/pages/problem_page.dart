@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:serverapp/api/gemini_api.dart';
+import 'package:serverapp/models/gemini_response.dart';
 
 class ProblemPage extends StatefulWidget {
   const ProblemPage({super.key});
@@ -12,8 +13,8 @@ class ProblemPage extends StatefulWidget {
   State<StatefulWidget> createState() => _ProblemPageState();
 }
 
-class _ProblemPageState extends State<ProblemPage> {
-  String? _response;
+class _ProblemPageState extends State<ProblemPage> with AutomaticKeepAliveClientMixin<ProblemPage> {
+  GeminiResponse? _response;
   bool _loading = false;
   final imagePicker = ImagePicker();
 
@@ -30,10 +31,13 @@ class _ProblemPageState extends State<ProblemPage> {
       });
     }
 
-    final response = await GeminiSource.getFromImageAndText(
+    final responseRaw = await GeminiSource.getFromImageAndText(
       File(image!.path),
       '이 문제를 보고 문제를 한국어로 번역해주고, 문제의 답을 준 다음 풀이도 써줘. 답변은 JSON형식으로 해주고, 번역문은 content 키에, 답은 answer 키에, 풀이는 solution 키에 넣어줘.'
     );
+    // trim '''json and ''' at start and end
+    final responseString = responseRaw.substring(7, responseRaw.length - 3).trim();
+    final response = GeminiResponse.fromString(responseString);
 
     setState(() {
       _response = response;
@@ -42,7 +46,11 @@ class _ProblemPageState extends State<ProblemPage> {
   }
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Scaffold(
@@ -76,7 +84,14 @@ class _ProblemPageState extends State<ProblemPage> {
           borderRadius: BorderRadius.circular(10),
         ),
         child: SingleChildScrollView(
-          child: Text(_response!),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('문제 번역: ${_response!.content}'),
+              Text('답: ${_response!.answer}'),
+              Text('해설: ${_response!.solution}'),
+            ],
+          )
         ),
       );
     } else {
