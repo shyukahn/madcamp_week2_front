@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_gemini/flutter_gemini.dart';
 
 class GeminiSource {
@@ -13,9 +15,14 @@ class GeminiSource {
     }
   }
 
-  static Future<String> getFromImageAndText(String text) async {
+  static Future<String> getFromImageAndText(File image, String text) async {
     try {
-      final value = await _gemini.text(text, modelName: 'models/gemini-pro');
+      final value = await _gemini.textAndImage(
+        text: text,
+        images: [image.readAsBytesSync()],
+        modelName: 'models/gemini-1.5-flash',
+        generationConfig: GenerationConfig()
+      );
       return value?.output ?? _errorMessage;
     } catch (e) {
       return e.toString();

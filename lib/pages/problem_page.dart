@@ -1,4 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:serverapp/api/gemini_api.dart';
 
 class ProblemPage extends StatefulWidget {
@@ -11,15 +15,25 @@ class ProblemPage extends StatefulWidget {
 class _ProblemPageState extends State<ProblemPage> {
   String? _response;
   bool _loading = false;
-  final TextEditingController _geminiInputController = TextEditingController();
+  final imagePicker = ImagePicker();
 
-  void _getResponse() async {
+  void _getResponse(ImageSource source) async {
     setState(() {
       _loading = true;
       _response = null;
     });
 
-    final response = await GeminiSource.getFromText(_geminiInputController.text);
+    final image = await imagePicker.pickImage(source: source);
+    if (image == null) {
+      setState(() {
+        _loading = false;
+      });
+    }
+
+    final response = await GeminiSource.getFromImageAndText(
+      File(image!.path),
+      '이 문제를 보고 문제를 한국어로 번역해주고, 문제의 답을 준 다음 풀이도 써줘. 답변은 JSON형식으로 해주고, 번역문은 content 키에, 답은 answer 키에, 풀이는 solution 키에 넣어줘.'
+    );
 
     setState(() {
       _response = response;
@@ -31,22 +45,20 @@ class _ProblemPageState extends State<ProblemPage> {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          _geminiResponseText(),
-          const SizedBox(height: 24),
-          _userInputTextField(),
-          const SizedBox(height: 12),
-          _getResponseButton(),
-        ],
-      ),
+      child: Scaffold(
+        body: Center(
+          child: _geminiResponseText(),
+        ),
+        floatingActionButtonLocation: ExpandableFab.location,
+        floatingActionButton: _floatingActionButton(),
+      )
     );
   }
 
   Widget _geminiResponseText() {
     if (_loading) {
       return const Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           CircularProgressIndicator(),
           SizedBox(height: 16),
@@ -57,7 +69,7 @@ class _ProblemPageState extends State<ProblemPage> {
       return Container(
         padding: const EdgeInsets.all(8.0),
         constraints: const BoxConstraints(
-            maxHeight: 300
+            maxHeight: 500
         ),
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey),
@@ -74,24 +86,44 @@ class _ProblemPageState extends State<ProblemPage> {
     }
   }
 
-  Widget _userInputTextField() {
-    return TextField(
-      controller: _geminiInputController,
-      decoration: InputDecoration(
-        border: const OutlineInputBorder(),
-        hintText: 'Enter your query',
-        suffixIcon: IconButton(
-          onPressed: _geminiInputController.clear,
-          icon: const Icon(Icons.clear),
-        )
+  Widget _floatingActionButton() {
+    return ExpandableFab(
+      distance: 75,
+      duration: const Duration(milliseconds: 200),
+      type: ExpandableFabType.up,
+      openButtonBuilder: RotateFloatingActionButtonBuilder(
+        child: const Icon(Icons.add),
+        shape: const CircleBorder(),
+        angle: 0.7854,
       ),
+      closeButtonBuilder: RotateFloatingActionButtonBuilder(
+        child: const Icon(Icons.close),
+        shape: const CircleBorder(),
+      ),
+      children: [
+        _fabGallery(),
+        _fabCamera(),
+      ],
     );
   }
 
-  Widget _getResponseButton() {
-    return TextButton(
-      onPressed: _getResponse,
-      child: const Text('Get response from Gemini'),
+  Widget _fabCamera() {
+    return FloatingActionButton(
+      onPressed: () {
+        _getResponse(ImageSource.camera);
+      },
+      shape: const CircleBorder(),
+      child: const Icon(Icons.add_a_photo),
+    );
+  }
+
+  Widget _fabGallery() {
+    return FloatingActionButton(
+      onPressed: () {
+        _getResponse(ImageSource.gallery);
+      },
+      shape: const CircleBorder(),
+      child: const Icon(Icons.add_photo_alternate),
     );
   }
 }
