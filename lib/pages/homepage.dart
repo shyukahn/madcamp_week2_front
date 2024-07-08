@@ -14,6 +14,7 @@ class Homepage extends StatefulWidget {
 
 class _HomepageState extends State<Homepage> {
   int _selectedIndex = 0;
+  final _pageController = PageController();
 
   static const List<Widget> _mainPages = <Widget>[
     CommunityPage(),
@@ -24,6 +25,7 @@ class _HomepageState extends State<Homepage> {
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
+      _pageController.jumpToPage(index);
     });
   }
 
@@ -35,7 +37,11 @@ class _HomepageState extends State<Homepage> {
         title: Text(widget.title),
       ),
       body: Center(
-        child: _mainPages[_selectedIndex],
+        child: PageView(
+          controller: _pageController,
+          onPageChanged: _onItemTapped,
+          children: _mainPages,
+        ),
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
