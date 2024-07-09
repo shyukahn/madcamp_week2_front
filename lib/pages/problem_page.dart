@@ -77,19 +77,38 @@ class _ProblemPageState extends State<ProblemPage>{
       );
     } else if (_pastQuestions == null) {
       return const Center(
-        child: Text('오류가 발생했습니다')
+          child: Text('오류가 발생했습니다')
       );
     } else {
       return ListView.separated(
         padding: EdgeInsets.all(12.0),
         itemCount: _pastQuestions!.length,
         itemBuilder: (BuildContext context, int index) {
-          return Column(
-            children: [
-              Text(_pastQuestions![index].content),
-              SizedBox(height: 8.0,),
-              Text(_pastQuestions![index].answer),
-            ],
+          return GestureDetector(
+            onTap: () {
+              _showDetailDialog(_pastQuestions![index]);
+            },
+            child: Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15.0),
+              ),
+              elevation: 5,
+              margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              child: ListTile(
+                title: Text(
+                  _pastQuestions![index].content,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle: Text(
+                  _pastQuestions![index].answer,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              ),
+            ),
           );
         },
         separatorBuilder: (BuildContext context, int index) {
@@ -97,6 +116,37 @@ class _ProblemPageState extends State<ProblemPage>{
         },
       );
     }
+  }
+
+  void _showDetailDialog(GeminiResponse question) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          title: Text(question.content),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('답변: ${question.answer}'),
+                SizedBox(height: 10),
+                Text('해결 방법: ${question.solution.isNotEmpty ? question.solution : "없음"}'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('닫기'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Widget _floatingActionButton() {
@@ -144,4 +194,3 @@ class _ProblemPageState extends State<ProblemPage>{
     );
   }
 }
-
