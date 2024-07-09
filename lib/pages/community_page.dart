@@ -89,10 +89,15 @@ class _CommunityPageState extends State<CommunityPage> {
         )
       );
     } else if (_simplePosts.isEmpty) {
-      return const Scaffold(
-      body: Center(
-        child: Text('게시물이 없습니다'),
-      )
+      return Scaffold(
+        body: const Center(
+          child: Text('게시물이 없습니다'),
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: _writePost,
+          shape: const CircleBorder(),
+          child: const Icon(Icons.create),
+        ),
       );
     } else {
       return Scaffold(
