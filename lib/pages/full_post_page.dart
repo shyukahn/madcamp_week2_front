@@ -2,14 +2,16 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
+import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 
 import '../models/comment.dart';
 import '../models/full_post.dart';
 
 class FullPostPage extends StatefulWidget {
   final int postId;
-  final communityUrl = '${dotenv.env['baseUrl']}community/post/';
 
   FullPostPage(this.postId, {super.key});
 
@@ -19,13 +21,16 @@ class FullPostPage extends StatefulWidget {
 
 class _FullPostPageState extends State<FullPostPage> {
   bool _isLoading = true;
+  bool _isCommentAvailable = true;
   FullPost? fullPost;
+  final _communityUrl = '${dotenv.env['baseUrl']}community/post/';
+  final _commentUrl = '${dotenv.env['baseUrl']}community/save_comment/';
   final TextEditingController _commentController = TextEditingController();
 
   void _getPostResponse() async {
-    final postResponse = await http.get(Uri.parse(widget.communityUrl + widget.postId.toString()));
+    final postResponse = await http.get(Uri.parse(_communityUrl + widget.postId.toString()));
     if (postResponse.statusCode == 200) {
-      final Map<String, dynamic> jsonMap = Map<String, dynamic>.from(jsonDecode(postResponse.body));
+      final Map<String, dynamic> jsonMap = Map<String, dynamic>.from(jsonDecode(utf8.decode(postResponse.bodyBytes)));
       final List<Map<String, dynamic>> commentObjects = List<Map<String, dynamic>>.from(jsonMap['comments']);
       setState(() {
         fullPost = FullPost(
@@ -46,13 +51,37 @@ class _FullPostPageState extends State<FullPostPage> {
     }
   }
 
-  void _addComment() {
+  void _addComment() async {
     final String commentText = _commentController.text;
     if (commentText.isNotEmpty) {
       setState(() {
-        fullPost?.comments.add(Comment(content: commentText));
-        _commentController.clear();
+        _isCommentAvailable = false;
       });
+      final user = await UserApi.instance.me();
+      final now = DateTime.now();
+      final commentResponse = await http.post(
+        Uri.parse(_commentUrl),
+        body: {
+          "post" : widget.postId.toString(),
+          "created_at" : "${DateFormat('yyyy-MM-dd').format(now)}T${DateFormat('HH:mm:ss').format(now)}Z",
+          "kakao_id" : user.id.toString(),
+          "content" : commentText,
+        }
+      );
+      if (commentResponse.statusCode == 201) {
+        setState(() {
+          fullPost?.comments.add(Comment(content: commentText));
+          _commentController.clear();
+        });
+        Fluttertoast.showToast(msg: '댓글이 등록되었습니다');
+      } else {
+        Fluttertoast.showToast(msg: '오류가 발생했습니다');
+      }
+      setState(() {
+        _isCommentAvailable = true;
+      });
+    } else {
+      Fluttertoast.showToast(msg: '댓글 내용을 입력해주세요');
     }
   }
 
@@ -65,7 +94,11 @@ class _FullPostPageState extends State<FullPostPage> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
+      return Scaffold(
+        appBar: AppBar(
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          title: const Text('게시물 보기'),
+        ),
         body: Center(
           child: CircularProgressIndicator(),
         ),
@@ -89,6 +122,7 @@ class _FullPostPageState extends State<FullPostPage> {
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _postBody(),
                       const SizedBox(height: 16),
@@ -113,6 +147,7 @@ class _FullPostPageState extends State<FullPostPage> {
       children: [
         Text(
           fullPost!.title,
+          textAlign: TextAlign.start,
           style: const TextStyle(
             fontSize: 20,
             color: Colors.black,
@@ -122,6 +157,7 @@ class _FullPostPageState extends State<FullPostPage> {
         const SizedBox(height: 8),
         Text(
           fullPost!.content,
+          textAlign: TextAlign.start,
           style: const TextStyle(
             fontSize: 18,
             color: Colors.black,
@@ -176,7 +212,7 @@ class _FullPostPageState extends State<FullPostPage> {
             const SizedBox(width: 8),
             IconButton(
               icon: const Icon(Icons.send),
-              onPressed: _addComment,
+              onPressed: _isCommentAvailable ? _addComment : null,
               color: Theme.of(context).primaryColor,
             ),
           ],

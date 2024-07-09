@@ -17,10 +17,10 @@ class ProblemPage extends StatefulWidget {
   State<StatefulWidget> createState() => _ProblemPageState();
 }
 
-class _ProblemPageState extends State<ProblemPage> with AutomaticKeepAliveClientMixin<ProblemPage> {
+class _ProblemPageState extends State<ProblemPage>{
   final imagePicker = ImagePicker();
   bool _isLoading = true;
-  final _questionUrl = '${dotenv.env['baseUrl']}my_question/my_page/user_question';
+  final _questionUrl = '${dotenv.env['baseUrl']}my_question/my_page/user_question/';
   List<GeminiResponse>? _pastQuestions;
 
   void _showGeminiReviewPage(ImageSource source) async {
@@ -34,9 +34,6 @@ class _ProblemPageState extends State<ProblemPage> with AutomaticKeepAliveClient
   }
 
   @override
-  bool get wantKeepAlive => true;
-
-  @override
   void initState() {
     _getPastQuestions();
     super.initState();
@@ -44,9 +41,10 @@ class _ProblemPageState extends State<ProblemPage> with AutomaticKeepAliveClient
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
     return Scaffold(
-      body: _showPastQuestions(),
+      body: Scrollbar(
+        child: _showPastQuestions(),
+      ),
       floatingActionButtonLocation: ExpandableFab.location,
       floatingActionButton: _floatingActionButton(),
     );
@@ -56,12 +54,12 @@ class _ProblemPageState extends State<ProblemPage> with AutomaticKeepAliveClient
     final user = await UserApi.instance.me();
     final pastQuestionsResponse = await http.get(Uri.parse('$_questionUrl?kakao_id=${user.id}'));
     if (pastQuestionsResponse.statusCode == 200) {
-      final List<Map<String, String>> jsonList = List<Map<String, String>>.from(jsonDecode(pastQuestionsResponse.body));
+      final List<Map<String, dynamic>> jsonList = List<Map<String, dynamic>>.from(jsonDecode(utf8.decode(pastQuestionsResponse.bodyBytes)));
       _pastQuestions = jsonList.map(
-        (Map<String, String> jsonMap) {
+        (Map<String, dynamic> jsonMap) {
           return GeminiResponse(
-            content: jsonMap['content']!,
-            answer: jsonMap['answer']!,
+            content: jsonMap['content']! as String,
+            answer: jsonMap['answer']! as String,
             solution: '',
           );
         }
@@ -83,11 +81,13 @@ class _ProblemPageState extends State<ProblemPage> with AutomaticKeepAliveClient
       );
     } else {
       return ListView.separated(
+        padding: EdgeInsets.all(12.0),
         itemCount: _pastQuestions!.length,
         itemBuilder: (BuildContext context, int index) {
           return Column(
             children: [
               Text(_pastQuestions![index].content),
+              SizedBox(height: 8.0,),
               Text(_pastQuestions![index].answer),
             ],
           );

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:page_transition/page_transition.dart';
 import 'package:serverapp/pages/new_post_page.dart';
 import 'package:serverapp/widgets/post_list_view.dart';
 import 'package:http/http.dart' as http;
@@ -20,31 +21,57 @@ class _CommunityPageState extends State<CommunityPage> {
   final List<SimplePost> _simplePosts = [];
   bool _isLoading = true;
 
+  void refreshPage() {
+    setState(() {
+      _isLoading = true;
+    });
+    _getPostsResponse();
+  }
+
   void _writePost() {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => NewPostPage())
-    );
+        PageTransition(
+          child: NewPostPage(),
+          type: PageTransitionType.bottomToTop,
+          duration: Duration(milliseconds: 150),
+          reverseDuration: Duration(milliseconds: 150),
+          curve: Curves.easeInOutBack,
+          inheritTheme: true,
+          ctx: context,
+        )
+    ).then((_) => refreshPage());
   }
 
   void _getPostsResponse() async {
-    final simplePostsResponse = await http.get(Uri.parse(communityUrl));
-    if (simplePostsResponse.statusCode == 200) {
-      final simplePostsString = simplePostsResponse.body;
-      final List<Map<String, dynamic>> jsonList = List<Map<String, dynamic>>.from(jsonDecode(simplePostsString));
-      for (var jsonMap in jsonList) {
-        _simplePosts.add(
-          SimplePost(
-            postId: jsonMap['post_id'] as int,
-            title: jsonMap['title'] as String,
-            summary: '${jsonMap['summary'] as String}...',
-            comments: jsonMap['comments_count'] as int
-          )
-        );
+    final simplePostsResponse = await http.get(
+      Uri.parse(communityUrl),
+      headers: {
+        "Cache-Control" : "no-cache, no-store, must-revalidate"
       }
+    );
+    if (simplePostsResponse.statusCode == 200) {
+      final simplePostsString = simplePostsResponse.bodyBytes;
+      final List<Map<String, dynamic>> jsonList = List<Map<String, dynamic>>.from(jsonDecode(utf8.decode(simplePostsString)));
+
+      setState(() {
+        _simplePosts.clear(); // Clear the list before adding new items
+        for (var jsonMap in jsonList) {
+          _simplePosts.add(
+              SimplePost(
+                  postId: jsonMap['post_id'] as int,
+                  title: jsonMap['title'] as String,
+                  summary: '${jsonMap['summary'] as String}...',
+                  comments: jsonMap['comments_count'] as int
+              )
+          );
+        }
+        _isLoading = false; // Update loading state
+      });
+    } else {
+      setState(() {
+        _isLoading = false; // Update loading state even if the response is not successful
+      });
     }
-    setState(() {
-      _isLoading = false;
-    });
   }
 
   @override
@@ -69,9 +96,7 @@ class _CommunityPageState extends State<CommunityPage> {
       );
     } else {
       return Scaffold(
-        body: Center(
-            child: PostListView(simplePosts: _simplePosts)
-        ),
+        body: PostListView(simplePosts: _simplePosts),
         floatingActionButton: FloatingActionButton(
           onPressed: _writePost,
           shape: const CircleBorder(),
