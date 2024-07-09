@@ -12,7 +12,7 @@ class NewPostPage extends StatelessWidget {
   final _contextController = TextEditingController();
 
   void _cancelPost(BuildContext context) {
-    Navigator.of(context).pop();
+    Navigator.of(context).pop(null);
   }
 
   void _sendPostRequest(BuildContext context) async {
@@ -29,7 +29,7 @@ class NewPostPage extends StatelessWidget {
     );
     if (response.statusCode == 201) {
       Fluttertoast.showToast(msg: '게시물이 등록되었습니다');
-      Navigator.of(context).pop();
+      Navigator.of(context).pop(null);
     } else {
       Fluttertoast.showToast(msg: '오류가 발생했습니다');
     }
