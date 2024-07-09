@@ -15,20 +15,21 @@ class NewPostPage extends StatelessWidget {
     Navigator.of(context).pop();
   }
 
-  void _sendPostRequest() async {
+  void _sendPostRequest(BuildContext context) async {
     final user = await UserApi.instance.me();
     final now = DateTime.now();
     final response = await http.post(Uri.parse(communityUrl),
-      body: {
-        "kakao_id" : user.id.toString(),
-        "title" : _titleController.text,
-        "content" : _contextController.text,
-        "created_at" : "${DateFormat('yyyy-MM-dd').format(now)}T${DateFormat('HH:mm:ss').format(now)}Z",
-        "post_picture" : "",
-      }
+        body: {
+          "kakao_id" : user.id.toString(),
+          "title" : _titleController.text,
+          "content" : _contextController.text,
+          "created_at" : "${DateFormat('yyyy-MM-dd').format(now)}T${DateFormat('HH:mm:ss').format(now)}Z",
+          "post_picture" : "",
+        }
     );
     if (response.statusCode == 201) {
       Fluttertoast.showToast(msg: '게시물이 등록되었습니다');
+      Navigator.of(context).pop();
     } else {
       Fluttertoast.showToast(msg: '오류가 발생했습니다');
     }
@@ -42,7 +43,7 @@ class NewPostPage extends StatelessWidget {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -51,34 +52,44 @@ class NewPostPage extends StatelessWidget {
               textAlignVertical: TextAlignVertical.bottom,
               decoration: InputDecoration(
                 hintText: '제목',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
               ),
             ),
-            TextField(
-              controller: _contextController,
-              textAlignVertical: TextAlignVertical.bottom,
-              decoration: InputDecoration(
-                hintText: '내용을 입력하세요.',
+            const SizedBox(height: 16),
+            Expanded(
+              child: TextField(
+                controller: _contextController,
+                textAlignVertical: TextAlignVertical.top,
+                maxLines: null,
+                expands: true,
+                decoration: InputDecoration(
+                  hintText: '내용을 입력하세요.',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                ),
               ),
             ),
+            const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 TextButton(
                   onPressed: () => _cancelPost(context),
-                  child: Text('취소'),
+                  child: const Text('취소'),
                 ),
+                const SizedBox(width: 8),
                 TextButton(
-                  onPressed: () {
-                    _sendPostRequest();
-                    Navigator.of(context).pop();
-                  },
-                  child: Text('등록'),
+                  onPressed: () => _sendPostRequest(context),
+                  child: const Text('등록'),
                 ),
               ],
             )
           ],
         ),
-      )
+      ),
     );
   }
 }
