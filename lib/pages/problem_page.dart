@@ -29,7 +29,13 @@ class _ProblemPageState extends State<ProblemPage>{
       if (!context.mounted) throw StateError('Context not mounted');
       Navigator.of(context).push(
           MaterialPageRoute(builder: (context) => GeminiReviewPage(imagePath: image.path))
-      );
+      ).then((_) {
+        setState(() {
+          _isLoading = true;
+        });
+        _getPastQuestions();
+      })
+      ;
     }
   }
 
@@ -55,15 +61,17 @@ class _ProblemPageState extends State<ProblemPage>{
     final pastQuestionsResponse = await http.get(Uri.parse('$_questionUrl?kakao_id=${user.id}'));
     if (pastQuestionsResponse.statusCode == 200) {
       final List<Map<String, dynamic>> jsonList = List<Map<String, dynamic>>.from(jsonDecode(utf8.decode(pastQuestionsResponse.bodyBytes)));
-      _pastQuestions = jsonList.map(
-        (Map<String, dynamic> jsonMap) {
-          return GeminiResponse(
-            content: jsonMap['content']! as String,
-            answer: jsonMap['answer']! as String,
-            solution: '',
-          );
-        }
-      ).toList();
+      setState(() {
+        _pastQuestions = jsonList.map(
+                (Map<String, dynamic> jsonMap) {
+              return GeminiResponse(
+                content: jsonMap['content']! as String,
+                answer: jsonMap['answer']! as String,
+                solution: '',
+              );
+            }
+        ).toList();
+      });
     }
     setState(() {
       _isLoading = false;
@@ -80,7 +88,7 @@ class _ProblemPageState extends State<ProblemPage>{
           child: Text('오류가 발생했습니다')
       );
     } else {
-      return ListView.separated(
+      return ListView.builder(
         padding: EdgeInsets.all(12.0),
         itemCount: _pastQuestions!.length,
         itemBuilder: (BuildContext context, int index) {
@@ -111,9 +119,6 @@ class _ProblemPageState extends State<ProblemPage>{
             ),
           );
         },
-        separatorBuilder: (BuildContext context, int index) {
-          return Divider();
-        },
       );
     }
   }
@@ -126,13 +131,12 @@ class _ProblemPageState extends State<ProblemPage>{
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
           ),
-          title: Text(question.content),
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
-                Text('답변: ${question.answer}'),
+                Text('문제: ${question.content}'),
                 SizedBox(height: 10),
-                Text('해결 방법: ${question.solution.isNotEmpty ? question.solution : "없음"}'),
+                Text(question.answer),
               ],
             ),
           ),
