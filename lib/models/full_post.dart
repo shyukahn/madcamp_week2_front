@@ -8,6 +8,7 @@ class FullPost {
   final String content;
   final List<Comment> comments;
   final AppUser appUser;
+  final bool isScrapped;
 
   FullPost({
     required this.postId,
@@ -15,5 +16,6 @@ class FullPost {
     required this.content,
     required this.comments,
     required this.appUser,
+    required this.isScrapped,
   });
 }

@@ -1,7 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
+import 'package:page_transition/page_transition.dart';
 import 'package:serverapp/pages/login_page.dart';
+import 'package:serverapp/pages/my_scrap_page.dart';
 
 class MyPage extends StatefulWidget {
   const MyPage({super.key});
@@ -96,6 +98,19 @@ class _MyPageState extends State<MyPage> {
     );
   }
 
+  void _showScrapPages() {
+    Navigator.of(context).push(
+      PageTransition(
+        child: MyScrapPage(),
+        type: PageTransitionType.rightToLeft,
+        duration: Duration(milliseconds: 120),
+        reverseDuration: Duration(milliseconds: 120),
+        inheritTheme: true,
+        ctx: context,
+      )
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -113,10 +128,10 @@ class _MyPageState extends State<MyPage> {
             : _user != null
             ? Column(
           children: [
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
             Row(
               children: [
-                const SizedBox(width: 24),
+                const SizedBox(width: 32),
                 CircleAvatar(
                   radius: 56,
                   backgroundImage: NetworkImage(
@@ -140,7 +155,7 @@ class _MyPageState extends State<MyPage> {
               ],
             ),
             TextButton(
-              onPressed: () {},
+              onPressed: _showScrapPages,
               style: TextButton.styleFrom(
                 padding: EdgeInsets.zero
               ),
