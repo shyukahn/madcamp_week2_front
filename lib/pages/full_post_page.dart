@@ -25,8 +25,11 @@ class _FullPostPageState extends State<FullPostPage> {
   bool _isCommentAvailable = true;
   bool _isScrapped = false;
   FullPost? fullPost;
+  final _userAsync = UserApi.instance.me();
   final _communityUrl = '${dotenv.env['baseUrl']}community/post/';
   final _commentUrl = '${dotenv.env['baseUrl']}community/save_comment/';
+  final _scrapUrl = '${dotenv.env['baseUrl']}community/post/scrab/';
+  final _deleteScrapUrl = '${dotenv.env['baseUrl']}community/delete_scrab/';
   final TextEditingController _commentController = TextEditingController();
 
   void _getPostResponse() async {
@@ -72,7 +75,7 @@ class _FullPostPageState extends State<FullPostPage> {
       setState(() {
         _isCommentAvailable = false;
       });
-      final user = await UserApi.instance.me();
+      final user = await _userAsync;
       final now = DateTime.now();
       final commentResponse = await http.post(
         Uri.parse(_commentUrl),
@@ -108,10 +111,38 @@ class _FullPostPageState extends State<FullPostPage> {
     }
   }
 
-  void _toggleScrap() {
-    setState(() {
-      _isScrapped = !_isScrapped;
-    });
+  void _toggleScrap() async {
+    if (!_isScrapped) {
+      // 스크랩 추가
+      final user = await _userAsync;
+      final scrapResponse = await http.post(
+        Uri.parse(_scrapUrl),
+        body: {
+          "post" : fullPost!.postId.toString(),
+          "kakao_id" : user.id.toString(),
+        }
+      );
+      if (scrapResponse.statusCode == 201) {
+        setState(() {
+          _isScrapped = !_isScrapped;
+        });
+      } else {
+        Fluttertoast.showToast(msg: '오류가 발생했습니다');
+      }
+    } else {
+      // 스크랩 취소
+      final user = await _userAsync;
+      final scrapResponse = await http.delete(
+        Uri.parse('$_deleteScrapUrl?post_id=${fullPost!.postId}&kakao_id=${user.id}')
+      );
+      if (scrapResponse.statusCode == 204) {
+        setState(() {
+          _isScrapped = !_isScrapped;
+        });
+      } else {
+        Fluttertoast.showToast(msg: '오류가 발생했습니다');
+      }
+    }
   }
 
   @override
