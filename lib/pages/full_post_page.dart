@@ -23,13 +23,18 @@ class FullPostPage extends StatefulWidget {
 class _FullPostPageState extends State<FullPostPage> {
   bool _isLoading = true;
   bool _isCommentAvailable = true;
+  bool _isScrapped = false;
   FullPost? fullPost;
+  final _userAsync = UserApi.instance.me();
   final _communityUrl = '${dotenv.env['baseUrl']}community/post/';
   final _commentUrl = '${dotenv.env['baseUrl']}community/save_comment/';
+  final _scrapUrl = '${dotenv.env['baseUrl']}community/post/scrab/';
+  final _deleteScrapUrl = '${dotenv.env['baseUrl']}community/delete_scrab/';
   final TextEditingController _commentController = TextEditingController();
 
   void _getPostResponse() async {
-    final postResponse = await http.get(Uri.parse(_communityUrl + widget.postId.toString()));
+    final user = await _userAsync;
+    final postResponse = await http.get(Uri.parse('$_communityUrl${widget.postId}/?kakao_id=${user.id}'));
     if (postResponse.statusCode == 200) {
       final Map<String, dynamic> jsonMap = Map<String, dynamic>.from(jsonDecode(utf8.decode(postResponse.bodyBytes)));
       final List<Map<String, dynamic>> commentObjects = List<Map<String, dynamic>>.from(jsonMap['comments']);
@@ -40,23 +45,25 @@ class _FullPostPageState extends State<FullPostPage> {
           title: jsonMap['title'] as String,
           content: jsonMap['content'] as String,
           comments: commentObjects.map(
-            (Map<String, dynamic> commentMap) {
-              final commentUser = Map<String, dynamic>.from(commentMap['user']);
-              return Comment(
-                content: commentMap['content'] as String,
-                appUser: AppUser(
-                  nickname: commentUser['nickname'] as String,
-                  thumbnailUrl: commentUser['thumbnail_image'] as String,
-                )
-              );
-            }
+                  (Map<String, dynamic> commentMap) {
+                final commentUser = Map<String, dynamic>.from(commentMap['user']);
+                return Comment(
+                    content: commentMap['content'] as String,
+                    appUser: AppUser(
+                      nickname: commentUser['nickname'] as String,
+                      thumbnailUrl: commentUser['thumbnail_image'] as String,
+                    )
+                );
+              }
           ).toList(),
           appUser: AppUser(
             nickname: userObject['nickname'] as String,
             thumbnailUrl: userObject['thumbnail_image'] as String,
-          )
+          ),
+          isScrapped: jsonMap['boolean_value'] as bool,
         );
         _isLoading = false;
+        _isScrapped = fullPost!.isScrapped;
       });
     } else {
       setState(() {
@@ -71,27 +78,27 @@ class _FullPostPageState extends State<FullPostPage> {
       setState(() {
         _isCommentAvailable = false;
       });
-      final user = await UserApi.instance.me();
+      final user = await _userAsync;
       final now = DateTime.now();
       final commentResponse = await http.post(
-        Uri.parse(_commentUrl),
-        body: {
-          "post" : widget.postId.toString(),
-          "created_at" : "${DateFormat('yyyy-MM-dd').format(now)}T${DateFormat('HH:mm:ss').format(now)}Z",
-          "kakao_id" : user.id.toString(),
-          "content" : commentText,
-        }
+          Uri.parse(_commentUrl),
+          body: {
+            "post" : widget.postId.toString(),
+            "created_at" : "${DateFormat('yyyy-MM-dd').format(now)}T${DateFormat('HH:mm:ss').format(now)}Z",
+            "kakao_id" : user.id.toString(),
+            "content" : commentText,
+          }
       );
       if (commentResponse.statusCode == 201) {
         setState(() {
           fullPost?.comments.add(
-            Comment(
-              content: commentText,
-              appUser: AppUser(
-                nickname: user.kakaoAccount!.profile!.nickname!,
-                thumbnailUrl: user.kakaoAccount!.profile!.thumbnailImageUrl!,
+              Comment(
+                  content: commentText,
+                  appUser: AppUser(
+                    nickname: user.kakaoAccount!.profile!.nickname!,
+                    thumbnailUrl: user.kakaoAccount!.profile!.thumbnailImageUrl!,
+                  )
               )
-            )
           );
           _commentController.clear();
         });
@@ -104,6 +111,40 @@ class _FullPostPageState extends State<FullPostPage> {
       });
     } else {
       Fluttertoast.showToast(msg: '댓글 내용을 입력해주세요');
+    }
+  }
+
+  void _toggleScrap() async {
+    if (!_isScrapped) {
+      // 스크랩 추가
+      final user = await _userAsync;
+      final scrapResponse = await http.post(
+          Uri.parse(_scrapUrl),
+          body: {
+            "post" : fullPost!.postId.toString(),
+            "kakao_id" : user.id.toString(),
+          }
+      );
+      if (scrapResponse.statusCode == 201) {
+        setState(() {
+          _isScrapped = true;
+        });
+      } else {
+        Fluttertoast.showToast(msg: '오류가 발생했습니다');
+      }
+    } else {
+      // 스크랩 취소
+      final user = await _userAsync;
+      final scrapResponse = await http.delete(
+          Uri.parse('$_deleteScrapUrl?post_id=${fullPost!.postId}&kakao_id=${user.id}')
+      );
+      if (scrapResponse.statusCode == 204) {
+        setState(() {
+          _isScrapped = false;
+        });
+      } else {
+        Fluttertoast.showToast(msg: '오류가 발생했습니다');
+      }
     }
   }
 
@@ -171,7 +212,7 @@ class _FullPostPageState extends State<FullPostPage> {
             CircleAvatar(
               radius: 16,
               backgroundImage: NetworkImage(
-                fullPost!.appUser.thumbnailUrl
+                  fullPost!.appUser.thumbnailUrl
               ),
             ),
             SizedBox(width: 8.0,),
@@ -181,6 +222,19 @@ class _FullPostPageState extends State<FullPostPage> {
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
+            ),
+            Spacer(),
+            IconButton(
+              onPressed: _toggleScrap,
+              iconSize: 28.0,
+              icon: _isScrapped
+                  ? Stack(
+                children: [
+                  Icon(Icons.star, color: Colors.yellow,),
+                  Icon(Icons.star_border, color: Colors.black),
+                ],
+              )
+                  : Icon(Icons.star_border, color: Colors.black,)
             ),
           ],
         ),
@@ -211,34 +265,34 @@ class _FullPostPageState extends State<FullPostPage> {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
       child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 12,
-                  backgroundImage: NetworkImage(
-                      comment.appUser.thumbnailUrl
+          padding: const EdgeInsets.all(12.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 12,
+                    backgroundImage: NetworkImage(
+                        comment.appUser.thumbnailUrl
+                    ),
                   ),
-                ),
-                SizedBox(width: 6.0,),
-                Text(
-                  comment.appUser.nickname,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
+                  SizedBox(width: 6.0,),
+                  Text(
+                    comment.appUser.nickname,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-              ],
-            ),
-            SizedBox(height: 8.0,),
-            Text(
-              comment.content,
-              style: const TextStyle(fontSize: 16),
-            ),
-          ],
-        )
+                ],
+              ),
+              SizedBox(height: 8.0,),
+              Text(
+                comment.content,
+                style: const TextStyle(fontSize: 16),
+              ),
+            ],
+          )
       ),
     );
   }
@@ -265,10 +319,10 @@ class _FullPostPageState extends State<FullPostPage> {
               child: TextField(
                 controller: _commentController,
                 decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16.0),
-                  ),
-                  hintText: '댓글 작성'
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16.0),
+                    ),
+                    hintText: '댓글 작성'
                 ),
               ),
             ),
