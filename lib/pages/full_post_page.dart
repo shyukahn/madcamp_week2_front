@@ -53,31 +53,33 @@ class _FullPostPageState extends State<FullPostPage> {
       return const Scaffold(
         body: Center(
           child: CircularProgressIndicator(),
-        )
+        ),
       );
     } else if (fullPost == null) {
       return const Scaffold(
         body: Center(
           child: Text('게시물을 불러오는데 실패했습니다'),
-        )
+        ),
       );
     } else {
       return Scaffold(
         appBar: AppBar(
           backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-          title: Text('게시물 보기'),
+          title: const Text('게시물 보기'),
         ),
         body: SingleChildScrollView(
           child: Padding(
-            padding: EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
                 _postBody(),
+                const SizedBox(height: 16),
+                Divider(color: Colors.grey, thickness: 1.5),
                 _postComments(),
               ],
             ),
-          )
-        )
+          ),
+        ),
       );
     }
   }
@@ -94,10 +96,11 @@ class _FullPostPageState extends State<FullPostPage> {
             fontWeight: FontWeight.bold,
           ),
         ),
+        const SizedBox(height: 8),
         Text(
           fullPost!.content,
           style: const TextStyle(
-            fontSize: 20,
+            fontSize: 18,
             color: Colors.black,
           ),
         ),
@@ -106,18 +109,26 @@ class _FullPostPageState extends State<FullPostPage> {
   }
 
   Widget _fromComment(Comment comment) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Divider(),
-        Text(comment.content)
-      ],
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Text(
+          comment.content,
+          style: const TextStyle(fontSize: 16),
+        ),
+      ),
     );
   }
 
   Widget _postComments() {
-    return Column(
-      children: fullPost!.comments.map(_fromComment).toList(),
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: fullPost!.comments.length,
+      itemBuilder: (context, index) {
+        return _fromComment(fullPost!.comments[index]);
+      },
     );
   }
 }

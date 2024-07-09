@@ -4,7 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/simple_post.dart';
 import '../pages/full_post_page.dart';
 
-class PostListView extends ListView {
+class PostListView extends StatelessWidget {
   final List<SimplePost> simplePosts;
   final communityUrl = '${dotenv.env['baseUrl']}community/post/';
 
@@ -19,13 +19,26 @@ class PostListView extends ListView {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
+        padding:EdgeInsets.all(8.0),
         itemCount: simplePosts.length,
         itemBuilder: (BuildContext context, int index) {
           final post = simplePosts[index];
-          return TextButton(
-              onPressed: () => _showSelectedPost(context, post),
-              style: TextButton.styleFrom(
-                  shape: const ContinuousRectangleBorder()
+          return GestureDetector(
+            onTap: () => _showSelectedPost(context, post),
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 8.0),
+              padding: const EdgeInsets.all(12.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12.0),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.5),
+                    spreadRadius: 1,
+                    blurRadius: 5,
+                    offset: Offset(0, 3), // changes position of shadow
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -38,6 +51,7 @@ class PostListView extends ListView {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  const SizedBox(height: 4.0),
                   Text(
                     post.summary,
                     style: const TextStyle(
@@ -45,6 +59,7 @@ class PostListView extends ListView {
                       color: Colors.black54,
                     ),
                   ),
+                  const SizedBox(height: 8.0),
                   Row(
                     children: [
                       Icon(
@@ -60,17 +75,14 @@ class PostListView extends ListView {
                         ),
                       ),
                     ],
-                  )
+                  ),
                 ],
-              )
+              ),
+            ),
           );
         },
         separatorBuilder: (BuildContext context, int index) =>
-        const Divider(
-          height: 0,
-          indent: 8.0,
-          endIndent: 8.0,
-        )
+        const SizedBox(height: 8.0) // add spacing between items
     );
   }
 }
