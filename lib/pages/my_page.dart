@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:serverapp/pages/login_page.dart';
@@ -112,27 +113,59 @@ class _MyPageState extends State<MyPage> {
             : _user != null
             ? Column(
           children: [
-            const SizedBox(height: 32),
-            CircleAvatar(
-              radius: 56,
-              backgroundImage: NetworkImage(
-                _user!.kakaoAccount!.profile!.profileImageUrl!,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              _user!.kakaoAccount!.profile!.nickname ?? 'Unknown',
-              style: const TextStyle(fontSize: 20),
-            ),
-            const SizedBox(height: 8,),
+            const SizedBox(height: 24),
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(width: 24),
+                CircleAvatar(
+                  radius: 56,
+                  backgroundImage: NetworkImage(
+                    _user!.kakaoAccount!.profile!.profileImageUrl!,
+                  ),
+                ),
+                const SizedBox(width: 24),
+                Text(
+                  _user!.kakaoAccount!.profile!.nickname ?? 'Unknown',
+                  style: const TextStyle(fontSize: 24),
+                ),
+              ]
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 _kakaoLogoutButton(),
                 const SizedBox(width: 10),
-                _kakaoDeleteButton()
+                _kakaoDeleteButton(),
+                const SizedBox(width: 10),
               ],
             ),
+            TextButton(
+              onPressed: () {},
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.zero
+              ),
+              child: const Padding(
+                 padding: EdgeInsets.symmetric(horizontal: 32, vertical: 20),
+                 child: Row(
+                   children: [
+                     Stack(
+                       children: [
+                         Icon(Icons.star, color: Colors.yellow,),
+                         Icon(Icons.star_border, color: Colors.black),
+                       ],
+                     ),
+                     SizedBox(width: 8.0,),
+                     Text(
+                       '스크랩',
+                       style: TextStyle(
+                         fontSize: 16,
+                         color: Colors.black,
+                       ),
+                     ),
+                   ],
+                 ),
+               )
+            )
           ],
         )
             : const Text('Failed to load user profile'),

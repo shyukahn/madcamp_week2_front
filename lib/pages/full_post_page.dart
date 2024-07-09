@@ -23,6 +23,7 @@ class FullPostPage extends StatefulWidget {
 class _FullPostPageState extends State<FullPostPage> {
   bool _isLoading = true;
   bool _isCommentAvailable = true;
+  bool _isScrapped = false;
   FullPost? fullPost;
   final _communityUrl = '${dotenv.env['baseUrl']}community/post/';
   final _commentUrl = '${dotenv.env['baseUrl']}community/save_comment/';
@@ -107,6 +108,12 @@ class _FullPostPageState extends State<FullPostPage> {
     }
   }
 
+  void _toggleScrap() {
+    setState(() {
+      _isScrapped = !_isScrapped;
+    });
+  }
+
   @override
   void initState() {
     _getPostResponse();
@@ -180,6 +187,19 @@ class _FullPostPageState extends State<FullPostPage> {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
+              ),
+            ),
+            Spacer(),
+            IconButton(
+              onPressed: _toggleScrap,
+              isSelected: _isScrapped,
+              iconSize: 28.0,
+              icon: Icon(Icons.star_border, color: Colors.black,),
+              selectedIcon: Stack(
+                children: [
+                  Icon(Icons.star, color: Colors.yellow,),
+                  Icon(Icons.star_border, color: Colors.black),
+                ],
               ),
             ),
           ],
