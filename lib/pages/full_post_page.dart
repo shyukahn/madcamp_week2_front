@@ -6,6 +6,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
+import 'package:serverapp/models/user.dart';
 
 import '../models/comment.dart';
 import '../models/full_post.dart';
@@ -13,7 +14,7 @@ import '../models/full_post.dart';
 class FullPostPage extends StatefulWidget {
   final int postId;
 
-  FullPostPage(this.postId, {super.key});
+  const FullPostPage(this.postId, {super.key});
 
   @override
   State createState() => _FullPostPageState();
@@ -32,15 +33,28 @@ class _FullPostPageState extends State<FullPostPage> {
     if (postResponse.statusCode == 200) {
       final Map<String, dynamic> jsonMap = Map<String, dynamic>.from(jsonDecode(utf8.decode(postResponse.bodyBytes)));
       final List<Map<String, dynamic>> commentObjects = List<Map<String, dynamic>>.from(jsonMap['comments']);
+      final Map<String, dynamic> userObject = Map<String, dynamic>.from(jsonMap['user']);
       setState(() {
         fullPost = FullPost(
           postId: jsonMap['post_id'] as int,
           title: jsonMap['title'] as String,
           content: jsonMap['content'] as String,
-          comments: [
-            for (var comment in commentObjects)
-              Comment(content: comment['content'] as String)
-          ],
+          comments: commentObjects.map(
+            (Map<String, dynamic> commentMap) {
+              final commentUser = Map<String, dynamic>.from(commentMap['user']);
+              return Comment(
+                content: commentMap['content'] as String,
+                appUser: AppUser(
+                  nickname: commentUser['nickname'] as String,
+                  thumbnailUrl: commentUser['thumbnail_image'] as String,
+                )
+              );
+            }
+          ).toList(),
+          appUser: AppUser(
+            nickname: userObject['nickname'] as String,
+            thumbnailUrl: userObject['thumbnail_image'] as String,
+          )
         );
         _isLoading = false;
       });
@@ -70,7 +84,15 @@ class _FullPostPageState extends State<FullPostPage> {
       );
       if (commentResponse.statusCode == 201) {
         setState(() {
-          fullPost?.comments.add(Comment(content: commentText));
+          fullPost?.comments.add(
+            Comment(
+              content: commentText,
+              appUser: AppUser(
+                nickname: user.kakaoAccount!.profile!.nickname!,
+                thumbnailUrl: user.kakaoAccount!.profile!.thumbnailImageUrl!,
+              )
+            )
+          );
           _commentController.clear();
         });
         Fluttertoast.showToast(msg: '댓글이 등록되었습니다');
@@ -128,7 +150,6 @@ class _FullPostPageState extends State<FullPostPage> {
                       const SizedBox(height: 16),
                       Divider(color: Colors.grey, thickness: 1.5),
                       _postComments(),
-                      const SizedBox(height: 80), // To avoid the last comment being hidden behind the input field
                     ],
                   ),
                 ),
@@ -145,6 +166,25 @@ class _FullPostPageState extends State<FullPostPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Row(
+          children: [
+            CircleAvatar(
+              radius: 16,
+              backgroundImage: NetworkImage(
+                fullPost!.appUser.thumbnailUrl
+              ),
+            ),
+            SizedBox(width: 8.0,),
+            Text(
+              fullPost!.appUser.nickname,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 8.0),
         Text(
           fullPost!.title,
           textAlign: TextAlign.start,
@@ -172,10 +212,33 @@ class _FullPostPageState extends State<FullPostPage> {
       margin: const EdgeInsets.symmetric(vertical: 8),
       child: Padding(
         padding: const EdgeInsets.all(12.0),
-        child: Text(
-          comment.content,
-          style: const TextStyle(fontSize: 16),
-        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 12,
+                  backgroundImage: NetworkImage(
+                      comment.appUser.thumbnailUrl
+                  ),
+                ),
+                SizedBox(width: 6.0,),
+                Text(
+                  comment.appUser.nickname,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 8.0,),
+            Text(
+              comment.content,
+              style: const TextStyle(fontSize: 16),
+            ),
+          ],
+        )
       ),
     );
   }
