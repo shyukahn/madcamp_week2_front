@@ -16,6 +16,10 @@ class NewPostPage extends StatelessWidget {
   }
 
   void _sendPostRequest(BuildContext context) async {
+    if (_titleController.text.isEmpty || _contextController.text.isEmpty) {
+      Fluttertoast.showToast(msg: '글 제목과 내용을 입력해주세요');
+      return;
+    }
     final user = await UserApi.instance.me();
     final now = DateTime.now();
     final response = await http.post(Uri.parse(communityUrl),
