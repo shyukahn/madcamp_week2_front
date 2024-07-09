@@ -20,25 +20,40 @@ class FullPostPage extends StatefulWidget {
 class _FullPostPageState extends State<FullPostPage> {
   bool _isLoading = true;
   FullPost? fullPost;
+  final TextEditingController _commentController = TextEditingController();
 
   void _getPostResponse() async {
     final postResponse = await http.get(Uri.parse(widget.communityUrl + widget.postId.toString()));
     if (postResponse.statusCode == 200) {
       final Map<String, dynamic> jsonMap = Map<String, dynamic>.from(jsonDecode(postResponse.body));
       final List<Map<String, dynamic>> commentObjects = List<Map<String, dynamic>>.from(jsonMap['comments']);
-      fullPost = FullPost(
-        postId: jsonMap['post_id'] as int,
-        title: jsonMap['title'] as String,
-        content: jsonMap['content'] as String,
-        comments: [
-          for (var comment in commentObjects)
-            Comment(content: comment['content'] as String)
-        ],
-      );
+      setState(() {
+        fullPost = FullPost(
+          postId: jsonMap['post_id'] as int,
+          title: jsonMap['title'] as String,
+          content: jsonMap['content'] as String,
+          comments: [
+            for (var comment in commentObjects)
+              Comment(content: comment['content'] as String)
+          ],
+        );
+        _isLoading = false;
+      });
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
     }
-    setState(() {
-      _isLoading = false;
-    });
+  }
+
+  void _addComment() {
+    final String commentText = _commentController.text;
+    if (commentText.isNotEmpty) {
+      setState(() {
+        fullPost?.comments.add(Comment(content: commentText));
+        _commentController.clear();
+      });
+    }
   }
 
   @override
@@ -67,18 +82,26 @@ class _FullPostPageState extends State<FullPostPage> {
           backgroundColor: Theme.of(context).colorScheme.inversePrimary,
           title: const Text('게시물 보기'),
         ),
-        body: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                _postBody(),
-                const SizedBox(height: 16),
-                Divider(color: Colors.grey, thickness: 1.5),
-                _postComments(),
-              ],
+        body: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      _postBody(),
+                      const SizedBox(height: 16),
+                      Divider(color: Colors.grey, thickness: 1.5),
+                      _postComments(),
+                      const SizedBox(height: 80), // To avoid the last comment being hidden behind the input field
+                    ],
+                  ),
+                ),
+              ),
             ),
-          ),
+            _commentInputField(),
+          ],
         ),
       );
     }
@@ -129,6 +152,36 @@ class _FullPostPageState extends State<FullPostPage> {
       itemBuilder: (context, index) {
         return _fromComment(fullPost!.comments[index]);
       },
+    );
+  }
+
+  Widget _commentInputField() {
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _commentController,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16.0),
+                  ),
+                  hintText: '댓글 작성'
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              icon: const Icon(Icons.send),
+              onPressed: _addComment,
+              color: Theme.of(context).primaryColor,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
