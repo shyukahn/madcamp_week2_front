@@ -3,6 +3,8 @@ import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:serverapp/pages/gemini_review_page.dart';
 
+import '../models/gemini_response.dart';
+
 class ProblemPage extends StatefulWidget {
   const ProblemPage({super.key});
 
@@ -12,6 +14,8 @@ class ProblemPage extends StatefulWidget {
 
 class _ProblemPageState extends State<ProblemPage> with AutomaticKeepAliveClientMixin<ProblemPage> {
   final imagePicker = ImagePicker();
+  bool _isLoading = true;
+  List<GeminiResponse>? _pastQuestions;
 
   void _showGeminiReviewPage(ImageSource source) async {
     final image = await imagePicker.pickImage(source: source);
@@ -38,6 +42,13 @@ class _ProblemPageState extends State<ProblemPage> with AutomaticKeepAliveClient
     );
   }
 
+  Widget _showPastQuestions() {
+    if (_isLoading) {
+      return CircularProgressIndicator();
+    } else {
+      return Text('Search Something!');
+    }
+  }
 
   Widget _floatingActionButton() {
     return ExpandableFab(
