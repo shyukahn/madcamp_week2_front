@@ -320,7 +320,7 @@ class _FullPostPageState extends State<FullPostPage> {
           fullPost!.content,
           textAlign: TextAlign.start,
           style: const TextStyle(
-            fontSize: 18,
+            fontSize: 16,
             color: Colors.black,
           ),
         ),

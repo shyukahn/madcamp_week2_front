@@ -5,10 +5,12 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
+import 'package:page_transition/page_transition.dart';
 import 'package:serverapp/pages/gemini_review_page.dart';
 import 'package:http/http.dart' as http;
 
 import '../models/gemini_response.dart';
+import 'new_post_page.dart';
 
 class ProblemPage extends StatefulWidget {
   const ProblemPage({super.key});
@@ -123,6 +125,20 @@ class _ProblemPageState extends State<ProblemPage>{
     }
   }
 
+  void _writeNewPostWithQuestion(GeminiResponse question) {
+    Navigator.of(context).push(
+      PageTransition(
+        child: NewPostPage(question: question,),
+        type: PageTransitionType.bottomToTop,
+        duration: Duration(milliseconds: 150),
+        reverseDuration: Duration(milliseconds: 150),
+        curve: Curves.easeInOutBack,
+        inheritTheme: true,
+        ctx: context,
+      )
+    );
+  }
+
   void _showDetailDialog(GeminiResponse question) {
     showDialog(
       context: context,
@@ -141,6 +157,13 @@ class _ProblemPageState extends State<ProblemPage>{
             ),
           ),
           actions: <Widget>[
+            TextButton(
+              child: const Text('공유'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _writeNewPostWithQuestion(question);
+              },
+            ),
             TextButton(
               child: const Text('닫기'),
               onPressed: () {

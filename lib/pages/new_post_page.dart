@@ -5,11 +5,15 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 
+import '../models/gemini_response.dart';
+
 class NewPostPage extends StatelessWidget {
-  NewPostPage({super.key});
+  late final GeminiResponse? question;
+
+  NewPostPage({this.question = null, super.key});
   final communityUrl = '${dotenv.env['baseUrl']}community/post/';
-  final _titleController = TextEditingController();
-  final _contextController = TextEditingController();
+  late final _titleController;
+  late final _contextController;
 
   void _cancelPost(BuildContext context) {
     Navigator.of(context).pop(null);
@@ -39,8 +43,18 @@ class NewPostPage extends StatelessWidget {
     }
   }
 
+  void _init() {
+    _titleController = TextEditingController();
+    if (question == null) {
+      _contextController = TextEditingController();
+    } else {
+      _contextController = TextEditingController(text: '${question!.content}\n${question!.answer}${question!.solution}');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    _init();
     return Scaffold(
       appBar: AppBar(
         title: const Text('글 쓰기'),
