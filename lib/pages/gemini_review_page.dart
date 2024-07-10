@@ -96,7 +96,7 @@ class _GeminiReviewPageState extends State<GeminiReviewPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CircularProgressIndicator(),
-            SizedBox(width: 16),
+            SizedBox(height: 16),
             Text('Gemini 답변 받아오는 중...')
           ],
         ),
