@@ -58,7 +58,7 @@ class LoginPage extends StatelessWidget {
 
   void _gotoHomepage(BuildContext context) {
     Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const Homepage(title: 'Homepage Title'))
+        MaterialPageRoute(builder: (context) => const Homepage(title: 'LingoHub'))
     );
   }
 

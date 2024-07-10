@@ -87,7 +87,7 @@ class _GeminiReviewPageState extends State<GeminiReviewPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Gemini Review'),
+        title: const Text('Gemini 답변 확인'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: _loading
@@ -96,7 +96,7 @@ class _GeminiReviewPageState extends State<GeminiReviewPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CircularProgressIndicator(),
-            SizedBox(height: 16),
+            SizedBox(width: 16),
             Text('Gemini 답변 받아오는 중...')
           ],
         ),
