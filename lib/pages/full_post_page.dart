@@ -293,6 +293,9 @@ class _FullPostPageState extends State<FullPostPage> {
             ),
             PopupMenuButton(
               icon: Icon(Icons.more_vert),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.0)
+              ),
               onSelected: _showDeleteDialog,
               itemBuilder: (BuildContext context) {
                 return [

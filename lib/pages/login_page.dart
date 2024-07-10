@@ -11,21 +11,7 @@ import 'package:serverapp/pages/HomePage.dart';
 class LoginPage extends StatelessWidget {
   LoginPage({super.key});
 
-  final _usernameController = TextEditingController();
-  final _passwordController = TextEditingController();
   final _userUrl = Uri.parse('${dotenv.env['baseUrl']}users/save_user/');
-
-  void _login(BuildContext context) {
-    // TODO: validate input with login server
-    if (_usernameController.text == 'admin' && _passwordController.text == 'admin') {
-      _gotoHomepage(context);
-    } else {
-      // Show error message
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid username or password'))
-      );
-    }
-  }
 
   void _signInWithKakao(BuildContext context) async {
     bool isUserLoggedIn = false;
@@ -80,51 +66,23 @@ class LoginPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            _usernameTextField(),
-            _passwordTextField(),
-            const SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: () => _login(context),
-              child: const Text('Login'),
-            ),
-            _kakaoLoginButton(
-                'kakao_login_medium_wide.png',
-                () => _signInWithKakao(context)
-            ),
-          ],
-        ),
+        padding: const EdgeInsets.all(12.0),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Padding(
+                padding: EdgeInsets.fromLTRB(0.0, 0.0, 24.0, 0.0),
+                child: Image.asset('assets/images/icon.png'),
+              ),
+              _kakaoLoginButton(
+                  'kakao_login_medium_wide.png',
+                      () => _signInWithKakao(context)
+              ),
+            ],
+          ),
+        )
       ),
-    );
-  }
-
-  Widget _usernameTextField() {
-    return TextField(
-      controller: _usernameController,
-      decoration: const InputDecoration(
-          hintText: '아이디',
-          hintStyle: TextStyle(
-            color: Colors.grey,
-          )
-      ),
-      textAlignVertical: TextAlignVertical.bottom,
-    );
-  }
-
-  Widget _passwordTextField() {
-    return TextField(
-      controller: _passwordController,
-      obscureText: true,
-      decoration: const InputDecoration(
-        hintText: '비밀번호',
-        hintStyle: TextStyle(
-          color: Colors.grey,
-        ),
-      ),
-      textAlignVertical: TextAlignVertical.bottom,
     );
   }
 
