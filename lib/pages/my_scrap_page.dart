@@ -21,6 +21,13 @@ class _MyScrapPageState extends State<MyScrapPage> {
   final List<SimplePost> _simplePosts = [];
   bool _isLoading = true;
 
+  void refreshPage() {
+    setState(() {
+      _isLoading = true;
+    });
+    _getPostsResponse();
+  }
+
   void _getPostsResponse() async {
     final user = await _userAsync;
     final simplePostsResponse = await http.get(
@@ -88,7 +95,7 @@ class _MyScrapPageState extends State<MyScrapPage> {
           backgroundColor: Theme.of(context).colorScheme.inversePrimary,
           title: Text('스크랩'),
         ),
-        body: PostListView(simplePosts: _simplePosts),
+        body: PostListView(simplePosts: _simplePosts, refreshCallback: refreshPage),
       );
     }
   }

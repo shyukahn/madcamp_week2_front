@@ -30,6 +30,7 @@ class _FullPostPageState extends State<FullPostPage> {
   final _commentUrl = '${dotenv.env['baseUrl']}community/save_comment/';
   final _scrapUrl = '${dotenv.env['baseUrl']}community/post/scrab/';
   final _deleteScrapUrl = '${dotenv.env['baseUrl']}community/delete_scrab/';
+  final _deletePostUrl = '${dotenv.env['baseUrl']}community/post_delete/';
   final TextEditingController _commentController = TextEditingController();
 
   void _getPostResponse() async {
@@ -50,6 +51,7 @@ class _FullPostPageState extends State<FullPostPage> {
                 return Comment(
                     content: commentMap['content'] as String,
                     appUser: AppUser(
+                      userId: int.parse(commentUser['kakao_id'] as String),
                       nickname: commentUser['nickname'] as String,
                       thumbnailUrl: commentUser['thumbnail_image'] as String,
                     )
@@ -57,6 +59,7 @@ class _FullPostPageState extends State<FullPostPage> {
               }
           ).toList(),
           appUser: AppUser(
+            userId: int.parse(userObject['kakao_id'] as String),
             nickname: userObject['nickname'] as String,
             thumbnailUrl: userObject['thumbnail_image'] as String,
           ),
@@ -92,13 +95,14 @@ class _FullPostPageState extends State<FullPostPage> {
       if (commentResponse.statusCode == 201) {
         setState(() {
           fullPost?.comments.add(
-              Comment(
-                  content: commentText,
-                  appUser: AppUser(
-                    nickname: user.kakaoAccount!.profile!.nickname!,
-                    thumbnailUrl: user.kakaoAccount!.profile!.thumbnailImageUrl!,
-                  )
+            Comment(
+              content: commentText,
+              appUser: AppUser(
+                userId: user.id,
+                nickname: user.kakaoAccount!.profile!.nickname!,
+                thumbnailUrl: user.kakaoAccount!.profile!.thumbnailImageUrl!,
               )
+            )
           );
           _commentController.clear();
         });
@@ -145,6 +149,57 @@ class _FullPostPageState extends State<FullPostPage> {
       } else {
         Fluttertoast.showToast(msg: '오류가 발생했습니다');
       }
+    }
+  }
+
+  void _deleteCurrentPage() async {
+    print('_deleteCurrentPage');
+    final user = await _userAsync;
+    final url = '$_deletePostUrl?kakao_id=${user.id}&post_id=${fullPost!.postId}';
+    print(url);
+    final deleteResponse = await http.delete(Uri.parse('$_deletePostUrl?kakao_id=${user.id}&post_id=${fullPost!.postId}'));
+    if (deleteResponse.statusCode == 204) {
+      Fluttertoast.showToast(msg: '게시글이 삭제되었습니다');
+      Navigator.of(context).pop();
+      Navigator.of(context).pop();
+    } else {
+      Fluttertoast.showToast(msg: '오류가 발생했습니다');
+      Navigator.of(context).pop();
+    }
+  }
+  
+  void _showDeleteDialog(String value) async {
+    if (value == 'delete') {
+      final user = await _userAsync;
+      if (user.id != fullPost!.appUser.userId) {
+        Fluttertoast.showToast(msg: '내가 쓴 글만 삭제할 수 있습니다');
+        Navigator.of(context).pop();
+        return;
+      }
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            contentPadding: EdgeInsets.fromLTRB(24, 24, 24, 12),
+            content: Text('게시물을 삭제하시겠습니까?'),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16.0),
+            ),
+            actionsPadding: EdgeInsets.all(8.0),
+            actions: [
+              TextButton(
+                onPressed: () =>
+                  Navigator.of(context).pop(),
+                child: Text('취소')
+              ),
+              TextButton(
+                onPressed: _deleteCurrentPage,
+                child: Text('확인')
+              ),
+            ],
+          );
+        }
+      );
     }
   }
 
@@ -235,6 +290,18 @@ class _FullPostPageState extends State<FullPostPage> {
                 ],
               )
                   : Icon(Icons.star_border, color: Colors.black,)
+            ),
+            PopupMenuButton(
+              icon: Icon(Icons.more_vert),
+              onSelected: _showDeleteDialog,
+              itemBuilder: (BuildContext context) {
+                return [
+                  PopupMenuItem<String>(
+                    child: Text('삭제'),
+                    value: 'delete',
+                  )
+                ];
+              }
             ),
           ],
         ),

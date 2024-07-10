@@ -7,8 +7,9 @@ import '../pages/full_post_page.dart';
 
 class PostListView extends StatefulWidget {
   final List<SimplePost> simplePosts;
+  final void Function() refreshCallback;
 
-  const PostListView({super.key, required this.simplePosts});
+  const PostListView({super.key, required this.simplePosts, required this.refreshCallback});
 
   @override
   State createState() => _PostListViewState();
@@ -27,7 +28,7 @@ class _PostListViewState extends State<PostListView> {
           inheritTheme: true,
           ctx: context,
         )
-    );
+    ).then((_) => widget.refreshCallback());
   }
 
   @override
