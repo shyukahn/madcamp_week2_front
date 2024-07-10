@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
     <application
-        android:label="serverapp"
+        android:label="LingoHub"
         android:icon="@mipmap/ic_launcher">
         <!-- 카카오 로그인 커스텀 URL 스킴 설정 -->
         <activity
