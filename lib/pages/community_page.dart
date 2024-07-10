@@ -101,7 +101,7 @@ class _CommunityPageState extends State<CommunityPage> {
       );
     } else {
       return Scaffold(
-        body: PostListView(simplePosts: _simplePosts),
+        body: PostListView(simplePosts: _simplePosts, refreshCallback: refreshPage),
         floatingActionButton: FloatingActionButton(
           onPressed: _writePost,
           shape: const CircleBorder(),
