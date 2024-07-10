@@ -151,11 +151,12 @@ class _ProblemPageState extends State<ProblemPage>{
             child: ListBody(
               children: <Widget>[
                 Text('문제: ${question.content}'),
-                SizedBox(height: 10),
+                Divider(),
                 Text(question.answer),
               ],
             ),
           ),
+          actionsPadding: EdgeInsets.all(8.0),
           actions: <Widget>[
             TextButton(
               child: const Text('공유'),

@@ -67,7 +67,6 @@ class NewPostPage extends StatelessWidget {
           children: [
             TextField(
               controller: _titleController,
-              textAlignVertical: TextAlignVertical.bottom,
               decoration: InputDecoration(
                 hintText: '제목',
                 border: OutlineInputBorder(
